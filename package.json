@@ -1,6 +1,9 @@
 {
   "scripts": {
-    "start": "nodemon index.js"
+    "start": "nodemon index.js",
+    "migration": "knex migrate:latest",
+    "tar": "tar Jxf postgrest-v12.2.3-linux-static-x64.tar.xz",
+    "run:postgres": "./postgrest postgrest.conf"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
