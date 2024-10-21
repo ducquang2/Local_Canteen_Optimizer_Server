@@ -11,3 +11,5 @@ To run this application:
 ```
 npm start
 ```
+
+Read this documentation for migration: (knex-js/migrations)[https://knexjs.org/guide/migrations.html]
