@@ -1,0 +1,13 @@
+{
+  "name": "rest-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "devDependencies": {
+    "pg": "^8.13.1",
+    "restify": "^11.1.0"
+  }
+}

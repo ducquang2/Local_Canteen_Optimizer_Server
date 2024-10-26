@@ -7,7 +7,7 @@ exports.up = async function(knex) {
         create role anon nologin;
 
         grant usage on schema public to anon;
-        grant select on public.category to anon;
+        grant SELECT ON ALL TABLES IN SCHEMA public to anon;
     `);
 };
 
