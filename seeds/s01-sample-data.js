@@ -30,18 +30,22 @@ exports.seed = async function(knex) {
 
   // Insert sample categories
   await knex('Categories').insert([
-    { category_name: 'Electronics', description: 'Devices and gadgets' },
-    { category_name: 'Books', description: 'Books of various genres' },
-    { category_name: 'Clothing', description: 'Apparel and accessories' },
+    { category_name: 'Main Course', description: 'Full meal options' },  
+    { category_name: 'Snacks', description: 'Light snacks and appetizers' },  
+    { category_name: 'Desserts', description: 'Sweet treats and desserts' }, 
   ]);
 
   // Insert sample products
-  await knex('Products').insert([
-    { product_name: 'Smartphone', category_id: 1, price: 299.99, description: 'Latest model smartphone', stock_quantity: 50, image_url: 'image_url_1', is_active: true },
-    { product_name: 'Laptop', category_id: 1, price: 999.99, description: 'High-performance laptop', stock_quantity: 30, image_url: 'image_url_2', is_active: true },
-    { product_name: 'Novel', category_id: 2, price: 19.99, description: 'Best-selling novel', stock_quantity: 100, image_url: 'image_url_3', is_active: true },
-    { product_name: 'T-shirt', category_id: 3, price: 14.99, description: 'Comfortable cotton t-shirt', stock_quantity: 200, image_url: 'image_url_4', is_active: true },
-  ]);
+  await knex('Products').insert([  
+    { product_name: 'Sandwich', category_id: 1, price: 5.00, description: 'Delicious sandwich with fresh ingredients', stock_quantity: 50, image_url: 'https://d28b9t9gqzccgt.cloudfront.net/z4815769629555_506670e39f83d4bb8c81deee715f8e5f.jpg', is_active: true },  
+    { product_name: 'Pizza', category_id: 1, price: 8.00, description: 'Cheesy pizza with various toppings', stock_quantity: 40, image_url: 'https://t3.ftcdn.net/jpg/01/02/97/10/360_F_102971073_l5ygYH1qCvejA8efcfuAYCRm7epxBEjn.jpg', is_active: true },  
+    { product_name: 'Pepperoni Pizza', category_id: 1, price: 8.00, description: 'Cheesy pizza with various toppings', stock_quantity: 40, image_url: 'https://c8.alamy.com/comp/JF5KXJ/pepperoni-pizza-italian-pizza-on-white-background-isolated-JF5KXJ.jpg', is_active: true },  
+    { product_name: 'Pasta', category_id: 1, price: 7.00, description: 'Pasta with tomato sauce and herbs', stock_quantity: 30, image_url: 'https://img.freepik.com/premium-photo/pasta-spaghetti-bolognese-white-plate-white-background-bolognese-sauce-is-classic-italian_763111-5934.jpg', is_active: true },  
+    { product_name: 'Chips', category_id: 2, price: 1.50, description: 'Crispy potato chips', stock_quantity: 100, image_url: 'https://media.istockphoto.com/id/175012912/photo/crisps.jpg?s=612x612&w=0&k=20&c=wiKGE9D2MPtqZV6VYKm-K7mcFfHaGSPEpSzTu59_eHk=', is_active: true },  
+    { product_name: 'Cookies', category_id: 2, price: 2.00, description: 'Freshly baked cookies', stock_quantity: 80, image_url: 'https://i.pinimg.com/736x/b3/7d/03/b37d033c1d92143eb5f2063b7510df5b.jpg', is_active: true },  
+    { product_name: 'Ice Cream', category_id: 3, price: 3.00, description: 'Creamy vanilla ice cream', stock_quantity: 60, image_url: 'https://img.freepik.com/premium-photo/ice-cream-with-white-background-high-quality-ultra_670382-88894.jpg', is_active: true },  
+    { product_name: 'Brownie', category_id: 3, price: 2.50, description: 'Chocolate brownie with nuts', stock_quantity: 70, image_url: 'https://img.freepik.com/premium-photo/delicious-chocolate-brownies-white-background-tasty-dessert_495423-51062.jpg', is_active: true }  
+  ]);  
 
   // Insert sample orders
   await knex('Orders').insert([

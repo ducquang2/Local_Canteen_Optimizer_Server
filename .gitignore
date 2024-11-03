@@ -5,3 +5,5 @@ node_modules/
 postgrest
 
 postgrest.conf
+
+package-lock.json
