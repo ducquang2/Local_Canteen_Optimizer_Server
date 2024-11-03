@@ -49,6 +49,46 @@ async function getUserRole(username) {
     }
 }
 
+async function getAllUsers({ page, pageSize, search, sort, sortBy}) {
+    try {
+        const queryValues = [];
+        const countValues = [];
+        let query = 'SELECT * FROM "Users"';
+        let countQuery = 'SELECT COUNT(*) FROM "Users"';
+
+        // Điều kiện tìm kiếm
+        if (search) {
+            query += ' WHERE "username" ILIKE $1';
+            countQuery += ' WHERE "username" ILIKE $1';
+            queryValues.push(`%${search}%`);
+            countValues.push(`%${search}%`);
+        }
+
+        // Điều kiện sắp xếp
+        if (sort) {
+            query += ` ORDER BY "${sortBy || 'user_id'}" ${sort === 'desc' ? 'DESC' : 'ASC'}`;
+        }
+
+        // Phân trang
+        if (page && pageSize) {
+            const offset = (page - 1) * pageSize;
+            query += ` LIMIT $${queryValues.length + 1} OFFSET $${queryValues.length + 2}`;
+            queryValues.push(pageSize, offset);
+        }
+
+        const result = await pool.query(query, queryValues);
+        const results = result?.rows;
+
+        const countResult = await pool.query(countQuery, countValues);
+        const totalItems = parseInt(countResult.rows[0].count, 10);
+
+        return { totalItems, results };
+    } catch (error) {
+        console.error('Error getting user role:', error);
+        throw error;
+    }
+}
+
 // Products
 async function getAllProducts({ page, pageSize, search, sort}) {
     try {
@@ -257,6 +297,7 @@ module.exports = {
     createUser,
     getUserByUsername,
     getUserRole,
+    getAllUsers,
     getAllProducts,
     deleteProductById,
     addProduct,

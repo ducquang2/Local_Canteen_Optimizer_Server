@@ -4,8 +4,11 @@ const restify = require('restify');
 const restifyJwt = require('restify-jwt-community');
 const auth = require('./auth');
 const db = require('./db');
+
 const product = require('./product')
 const order = require('./order')
+const user = require('./user')
+
 const jwt = require('jsonwebtoken');
 
 
@@ -57,6 +60,14 @@ function checkAdminPermissions(req, res, next) {
     auth.checkPermissions(req, res, next);
 }
 
+function checkManagerPermissions(req, res, next) {
+    req.route = { requiredRole: 'manager' };
+    auth.checkPermissions(req, res, next);
+}
+
+// Get all users
+server.get("/api/v1/users", checkManagerPermissions, user.getAllUsers);
+
 // Delete products by id
 server.get("/api/v1/products/delete/:id", checkAdminPermissions, product.deleteProductById);
 
@@ -80,25 +91,6 @@ server.post("/api/v1/orders-item/add/:orderId", checkAdminPermissions, order.add
 
 // get order item
 server.get("/api/v1/orders-item/:orderId", order.getOrderItemByOrderId);
-
-// server.use(restifyJwt({ secret: process.env.JWT_SECRET }).unless({ path: ['/auth'] }));
-// server.use(auth.authorize); // Apply authorization middleware
-// server.use(auth.checkPermissions); // Apply permission check middleware
-
-// server.get('/protected', { requiredRole: 'staff' }, async (req, res, next) => {
-//     res.send({ message: `Hello ${req.user.username}, you are authenticated as ${req.user.role}!` });
-//     next();
-// });
-
-// server.get('/manager-only', { requiredRole: 'manager' }, async (req, res, next) => {
-//     res.send({ message: 'This is a manager-only route.' });
-//     next();
-// });
-
-// server.get('/admin-only', { requiredRole: 'admin' }, async (req, res, next) => {
-//     res.send({ message: 'This is an admin-only route.' });
-//     next();
-// });
 
 server.listen(8080, function () {
     console.log('%s listening at %s', server.name, server.url);
