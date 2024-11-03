@@ -5,6 +5,7 @@ const restifyJwt = require('restify-jwt-community');
 const auth = require('./auth');
 const db = require('./db');
 const product = require('./product')
+const order = require('./order')
 const jwt = require('jsonwebtoken');
 
 
@@ -16,6 +17,9 @@ server.post('/auth', auth.authorize);
 
 // get all products
 server.get("/api/v1/products", product.getAllProducts);
+
+// get all orders
+server.get("/api/v1/orders", order.getAllOrders);
 
 // Middleware to decode token and attach user to request
 server.use((req, res, next) => {
@@ -59,8 +63,23 @@ server.get("/api/v1/products/delete/:id", checkAdminPermissions, product.deleteP
 // add products
 server.post("/api/v1/products/add", checkAdminPermissions, product.addProduct);
 
-// Route để chỉnh sửa sản phẩm theo id
+// update product
 server.post("/api/v1/products/update/:id", checkAdminPermissions, product.updateProductByID);
+
+// Delete order by id
+server.get("/api/v1/orders/delete/:id", checkAdminPermissions, order.deleteOrderById);
+
+// add orders
+server.post("/api/v1/orders/add", checkAdminPermissions, order.addOrder);
+
+// update order
+server.post("/api/v1/orders/update/:id", checkAdminPermissions, order.updateOrderByID);
+
+// add order item
+server.post("/api/v1/orders-item/add/:orderId", checkAdminPermissions, order.addOrderItem);
+
+// get order item
+server.get("/api/v1/orders-item/:orderId", order.getOrderItemByOrderId);
 
 // server.use(restifyJwt({ secret: process.env.JWT_SECRET }).unless({ path: ['/auth'] }));
 // server.use(auth.authorize); // Apply authorization middleware

@@ -145,6 +145,114 @@ async function updateProductByID(id, product) {
     }
 }
 
+// Order
+async function getAllOrders() {
+    try {
+        let query = 'SELECT * FROM "Orders"';
+
+        // Thực hiện truy vấn để lấy danh sách order
+        const result = await pool.query(query);
+        const results = result?.rows;
+
+        return results ;
+    } catch (error) {
+        console.error('Error getting user role:', error);
+        throw error;
+    }
+}
+
+async function deleteOrderById(id) {
+    try {
+        const result = await pool.query(
+            'DELETE FROM "Orders" WHERE order_id = $1 RETURNING *',
+            [id]
+        );
+
+        if (result.rowCount === 0) {
+            console.log(`No order found with id: ${id}`);
+            return null;
+        }
+        
+        console.log(`Order with id ${id} deleted successfully`);
+        return result.rows[0]; // Return the deleted product data if needed
+    } catch (error) {
+        console.error('Error deleting product:', error);
+        throw error;
+    }
+}
+
+async function addOrder(order) {
+    try {
+        const { customer_id, order_status, total_price} = order;
+        const result = await pool.query(
+            'INSERT INTO "Orders" (customer_id, order_status, total_price) VALUES ($1, $2, $3) RETURNING *',
+            [customer_id, order_status, total_price]
+        );
+        return result.rows[0]; // Return the deleted product data if needed
+    } catch (error) {
+        console.error('Error deleting order:', error);
+        throw error;
+    }
+}
+
+async function updateOrderByID(id, order) {
+    try {
+        const entries = Object.entries(order).filter(([_, value]) => value !== undefined && value !== null);
+        if (entries.length === 0) return null;
+
+        const fields = entries.map(([key], index) => `${key} = $${index + 1}`);
+        const values = entries.map(([_, value]) => value);
+
+        const query = `UPDATE "Orders" SET ${fields.join(", ")} WHERE order_id = $${entries.length + 1} RETURNING *`;
+        values.push(id);
+
+        const result = await pool.query(query, values);
+        return result.rowCount > 0 ? result.rows[0] : null;
+    } catch (error) {
+        console.error('Error deleting order:', error);
+        throw error;
+    }
+}
+
+// Order Details
+async function addOrderItem(orderItem) {
+    try {
+        const {orderId ,product_id, quantity, price } = orderItem;
+        const result = await pool.query(
+            `INSERT INTO "Order_Items" (order_id, product_id, quantity, price) 
+             VALUES ($1, $2, $3, $4) RETURNING *`,
+            [orderId, product_id, quantity, price]
+        );
+        await pool.query(
+            `UPDATE "Orders" SET total_price = total_price + $1 WHERE order_id = $2`,
+            [quantity * price, orderId]
+        );
+        return result.rows[0]; // Return the deleted product data if needed
+    } catch (error) {
+        console.error('Error deleting order:', error);
+        throw error;
+    }
+}
+
+// Order Id
+async function getOrderItemByOrderId(orderId) {
+    try {
+        
+        const result = await pool.query(
+            `SELECT oi.order_item_id, oi.order_id, oi.product_id, oi.quantity, oi.price, 
+                    p.product_name
+             FROM "Order_Items" oi
+             JOIN "Products" p ON oi.product_id = p.product_id
+             WHERE oi.order_id = $1`,
+            [orderId]
+        );
+        return result.rows; // Return the deleted product data if needed
+    } catch (error) {
+        console.error('Error deleting order:', error);
+        throw error;
+    }
+}
+
 module.exports = {
     createUser,
     getUserByUsername,
@@ -152,5 +260,11 @@ module.exports = {
     getAllProducts,
     deleteProductById,
     addProduct,
-    updateProductByID
+    updateProductByID,
+    getAllOrders,
+    deleteOrderById,
+    addOrder,
+    updateOrderByID,
+    addOrderItem,
+    getOrderItemByOrderId
 };
