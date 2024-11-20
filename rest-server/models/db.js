@@ -9,16 +9,47 @@ const pool = new Pool({
     database: process.env.POSTGRES_DB,
 });
 
-async function createUser(username, password) {
-    const hashedPassword = await bcrypt.hash(password, 10); // 10 is the salt rounds
+async function createUser(username, password, full_name, phone_number, role) {
     try {
         const result = await pool.query(
-            'INSERT INTO "Users" (username, password_hash) VALUES ($1, $2) RETURNING *',
-            [username, hashedPassword]
+            'INSERT INTO "Users" (username, password, full_name, phone_number, role) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [username, password, full_name, phone_number, role]
         );
         return result.rows[0];
     } catch (error) {
         console.error('Error creating user:', error);
+        throw error;
+    }
+}
+
+async function updateUser(username, updates) {
+    const entries = Object.entries(updates).filter(([_, value]) => value !== undefined && value !== null);
+    if (entries.length === 0) return null;
+
+    const fields = entries.map(([key], index) => `${key} = $${index + 1}`);
+    const values = entries.map(([_, value]) => value);
+
+    const query = `UPDATE "Users" SET ${fields.join(", ")} WHERE username = $${entries.length + 1} RETURNING *`;
+    values.push(username);
+
+    try {
+        const result = await pool.query(query, values);
+        return result.rowCount > 0 ? result.rows[0] : null;
+    } catch (error) {
+        console.error('Error updating user:', error);
+        throw error;
+    }
+}
+
+async function usernameExists(username) {
+    try {
+        const result = await pool.query(
+            'SELECT 1 FROM "Users" WHERE username = $1',
+            [username]
+        );
+        return result.rowCount > 0;
+    } catch (error) {
+        console.error('Error checking username existence:', error);
         throw error;
     }
 }
@@ -298,6 +329,8 @@ module.exports = {
     getUserByUsername,
     getUserRole,
     getAllUsers,
+    updateUser,
+    usernameExists,
     getAllProducts,
     deleteProductById,
     addProduct,
