@@ -1,21 +1,17 @@
-require('dotenv').config();
-
-const restify = require('restify');
 const jwt = require('jsonwebtoken');
-const db = require('./db');
+const db = require('../models/db');
 
 async function authorize(req, res) {
     const { username, password } = req.body;
     try {
         const user = await db.getUserByUsername(username);
-        console.log("user", user);
         if (!user || password !== user.password) {
             return res.send(401, { error: 'Invalid credentials' });
         }
         const token = jwt.sign(
-            { userId: user.id, username: user.username, role: user.role }, // Include role in token
+            { userId: user.id, username: user.username, role: user.role },
             process.env.JWT_SECRET,
-            { expiresIn: '3h' } // Token expires in 3 hour
+            { expiresIn: '3h' }
         );
         res.send({
             token, user: {
@@ -30,7 +26,7 @@ async function authorize(req, res) {
     }
 }
 
-function checkPermissions(req, res, next) { // Corrected to a synchronous function
+function checkPermissions(req, res, next) {
     const requiredRole = req.route.requiredRole;
     if (!requiredRole) return next();
 
