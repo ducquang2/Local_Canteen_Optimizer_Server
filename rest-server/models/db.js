@@ -22,15 +22,15 @@ async function createUser(username, password, full_name, phone_number, role) {
     }
 }
 
-async function updateUser(username, updates) {
+async function updateUser(id, updates) {
     const entries = Object.entries(updates).filter(([_, value]) => value !== undefined && value !== null);
     if (entries.length === 0) return null;
 
     const fields = entries.map(([key], index) => `${key} = $${index + 1}`);
     const values = entries.map(([_, value]) => value);
 
-    const query = `UPDATE "Users" SET ${fields.join(", ")} WHERE username = $${entries.length + 1} RETURNING *`;
-    values.push(username);
+    const query = `UPDATE "Users" SET ${fields.join(", ")} WHERE user_id = $${entries.length + 1} RETURNING *`;
+    values.push(id);
 
     try {
         const result = await pool.query(query, values);
@@ -59,6 +59,19 @@ async function getUserByUsername(username) {
         const result = await pool.query(
             'SELECT * FROM "Users" WHERE username = $1',
             [username]
+        );
+        return result.rows[0];
+    } catch (error) {
+        console.error('Error getting user:', error);
+        throw error;
+    }
+}
+
+async function getUserById(id) {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM "Users" WHERE user_id = $1',
+            [id]
         );
         return result.rows[0];
     } catch (error) {
@@ -329,6 +342,7 @@ module.exports = {
     getUserByUsername,
     getUserRole,
     getAllUsers,
+    getUserById,
     updateUser,
     usernameExists,
     getAllProducts,

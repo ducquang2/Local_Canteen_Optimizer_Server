@@ -45,7 +45,7 @@ async function addUser(req, res) {
 }
 
 async function updateUser(req, res) {
-    const { username } = req.params;
+    const { id } = req.params;
     const { password, full_name, phone_number, role } = req.body;
     const userRole = await db.getUserRole(req.user.username);
 
@@ -53,7 +53,7 @@ async function updateUser(req, res) {
         return res.status(403).send({ message: 'Access denied' });
     }
 
-    const existingUser = await db.getUserByUsername(username);
+    const existingUser = await db.getUserById(id);
     if (!existingUser) {
         return res.status(404).send({ message: 'User not found' });
     }
@@ -70,14 +70,14 @@ async function updateUser(req, res) {
         return res.status(400).send({ message: 'Password must be at least 8 characters long' });
     }
 
-    const updates = { password, full_name, phone_number, role };
+    const updates = password ? { password, full_name, phone_number, role } : { full_name, phone_number, role };
     if (password) {
         updates.password = await bcrypt.hash(password, 10);
     }
 
     try {
-        const updatedUser = await db.updateUser(username, updates);
-        res.send(updatedUser);
+        const updatedUser = await db.updateUser(id, updates);
+        res.status(201).send({ message: "User edited successfully", user: updatedUser });
     } catch (error) {
         console.error('Error updating user:', error);
         res.status(500).send({ message: 'An error occurred while updating the user' });
