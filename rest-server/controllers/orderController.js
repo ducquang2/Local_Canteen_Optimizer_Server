@@ -77,11 +77,38 @@ async function getOrderItemByOrderId(req, res) {
     }
 }
 
+// checkout
+async function checkout(req, res) {
+    const { table_id, order_id } = req.body;
+    if (!table_id || order_id == null) {
+        res.status(400)
+        return res.send({ message: "Table ID and Order ID price are required" });
+    }
+    try {
+        // Cập nhật trạng thái đơn hàng
+        const updatedOrder = await db.completeOrder(order_id);
+        // Đặt lại trạng thái bàn
+        const resetTable = await db.resetTableAfterPayment(table_id)
+        
+        res.status(200)
+        res.send({
+            message: 'Checkout completed successfully',
+            table: resetTable,
+            order: updatedOrder,
+        });
+    } catch (error) {
+        console.error('Error during checkout:', error);
+        res.status(500)
+        res.json({ error: 'Internal Server Error' });
+    }
+}
+
 module.exports = {
     getAllOrders,
     deleteOrderById,
     addOrder,
     updateOrderByID,
     addOrderItem,
-    getOrderItemByOrderId
+    getOrderItemByOrderId,
+    checkout
 };

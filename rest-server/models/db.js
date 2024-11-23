@@ -324,6 +324,65 @@ async function getOrderItemByOrderId(orderId) {
     }
 }
 
+
+// update order after checkout
+async function completeOrder(order_id) {
+    const query = `
+        UPDATE "Orders"
+        SET order_status = 'confirmed'
+        WHERE order_id = $1
+        RETURNING *;
+    `;
+    const result = await pool.query(query, [order_id]);
+    return result.rows[0];
+}
+
+// Seats
+async function getAllSeats() {
+    try {
+        let query = 'SELECT * FROM "Tables"';
+
+        // Thực hiện truy vấn để lấy danh sách order
+        const result = await pool.query(query);
+        const results = result?.rows;
+
+        return results ;
+    } catch (error) {
+        console.error('Error getting user role:', error);
+        throw error;
+    }
+}
+
+// check table is available
+async function checkTableAvailability(table_id) {
+    const query = 'SELECT * FROM "Tables" WHERE table_id = $1 AND is_available = true';
+    const result = await pool.query(query, [table_id]);
+    return result.rows[0]; // Trả về bàn nếu tìm thấy, ngược lại là undefined
+}
+
+// update status of table
+async function updateTableWithOrder(table_id, order_id) {
+    const query = `
+        UPDATE "Tables"
+        SET is_available = false, current_order_id = $1, updated_at = NOW()
+        WHERE table_id = $2
+        RETURNING *;
+    `;
+    const result = await pool.query(query, [order_id, table_id]);
+    return result.rows[0];
+}
+
+async function resetTableAfterPayment(table_id) {
+    const query = `
+        UPDATE "Tables"
+        SET is_available = true, current_order_id = null, updated_at = NOW()
+        WHERE table_id = $1
+        RETURNING *;
+    `;
+    const result = await pool.query(query, [table_id]);
+    return result.rows[0];
+}
+
 module.exports = {
     createUser,
     getUserByUsername,
@@ -340,5 +399,10 @@ module.exports = {
     addOrder,
     updateOrderByID,
     addOrderItem,
-    getOrderItemByOrderId
+    getOrderItemByOrderId,
+    completeOrder,
+    getAllSeats,
+    checkTableAvailability,
+    updateTableWithOrder,
+    resetTableAfterPayment
 };

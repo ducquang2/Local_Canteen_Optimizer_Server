@@ -88,4 +88,30 @@ exports.seed = async function(knex) {
     { amount: 1000.00, description: 'Office rent for October' },
     { amount: 200.00, description: 'Utility bills for September' },
   ]);
+
+  
+  // Insert sample tables
+
+  await knex('Tables').insert([
+    { table_name: 'Bàn 1', is_available: true},
+    { table_name: 'Bàn 2', is_available: true},
+    { table_name: 'Bàn 3', is_available: true},
+    { table_name: 'Bàn 4', is_available: true},
+    { table_name: 'Bàn 5', is_available: true},
+    { table_name: 'Bàn 6', is_available: true},
+    { table_name: 'Bàn 7', is_available: true},
+    { table_name: 'Bàn 8', is_available: true},
+    { table_name: 'Bàn 9', is_available: true},
+    { table_name: 'Bàn 10', is_available: true},
+    { table_name: 'Bàn 11', is_available: true},
+    { table_name: 'Bàn 12', is_available: true},
+    { table_name: 'Bàn 13', is_available: true},
+    { table_name: 'Bàn 14', is_available: true},
+    { table_name: 'Bàn 15', is_available: true},
+    { table_name: 'Bàn 16', is_available: true},
+    { table_name: 'Bàn 17', is_available: true},
+    { table_name: 'Bàn 18', is_available: true},
+    { table_name: 'Bàn 19', is_available: true},
+    { table_name: 'Bàn 20', is_available: true},
+  ]);
 };
