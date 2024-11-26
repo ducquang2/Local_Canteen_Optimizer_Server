@@ -219,7 +219,7 @@ async function updateProductByID(id, product) {
 // Order
 async function getAllOrders() {
     try {
-        let query = 'SELECT * FROM "Orders"';
+        let query = 'SELECT * FROM "Orders" ORDER BY order_id DESC';
 
         // Thực hiện truy vấn để lấy danh sách order
         const result = await pool.query(query);
@@ -337,10 +337,32 @@ async function completeOrder(order_id) {
     return result.rows[0];
 }
 
+async function getOrderById(order_id) {
+    const query = `
+        SELECT * 
+        FROM "Orders"
+        WHERE order_id = $1;
+    `;
+    const result = await pool.query(query, [order_id]);
+    return result.rows[0];
+}
+
+async function getOrderItems(order_id) {
+    const query = `
+        SELECT oi.*, p.product_name, p.image_url
+        FROM "Order_Items" AS oi
+        JOIN "Products" AS p ON oi.product_id = p.product_id
+        WHERE oi.order_id = $1;
+    `;
+    const result = await pool.query(query, [order_id]);
+    return result.rows;
+}
+
+
 // Seats
 async function getAllSeats() {
     try {
-        let query = 'SELECT * FROM "Tables"';
+        let query = 'SELECT * FROM "Tables" ORDER BY table_id ASC';
 
         // Thực hiện truy vấn để lấy danh sách order
         const result = await pool.query(query);
@@ -383,6 +405,16 @@ async function resetTableAfterPayment(table_id) {
     return result.rows[0];
 }
 
+async function getCurrentOrderIdByTableId(tableId) {
+    const query = `
+        SELECT current_order_id
+        FROM "Tables"
+        WHERE table_id = $1;
+    `;
+    const result = await pool.query(query, [tableId]);
+    return result.rows[0]?.current_order_id || null;
+}
+
 module.exports = {
     createUser,
     getUserByUsername,
@@ -404,5 +436,8 @@ module.exports = {
     getAllSeats,
     checkTableAvailability,
     updateTableWithOrder,
-    resetTableAfterPayment
+    resetTableAfterPayment,
+    getOrderById,
+    getOrderItems,
+    getCurrentOrderIdByTableId
 };

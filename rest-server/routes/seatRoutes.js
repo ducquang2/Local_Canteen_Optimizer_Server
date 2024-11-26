@@ -9,6 +9,6 @@ const { checkSupervisorPermission } = require('../middlewares/permissions');
 const router = express.Router();
 
 router.get("/seats", getAllSeats);
-router.post("/seat/start-order", checkSupervisorPermission, startOrder);
+router.post("/seat/start-order", startOrder);
 
 module.exports = router;
