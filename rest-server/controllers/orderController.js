@@ -2,6 +2,8 @@ const db = require('../models/db');
 
 async function getAllOrders(req, res) {
     try {
+        const page = parseInt(req.query.page, 10);
+        const pageSize = parseInt(req.query.pageSize, 10);
         const results = await db.getAllOrders();
         res.send({ results });
     } catch (error) {

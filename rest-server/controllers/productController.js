@@ -6,7 +6,9 @@ async function getAllProducts(req, res) {
         const pageSize = parseInt(req.query.pageSize, 10);
         const search = req.query.search;
         const sort = req.query.sort;
-        const { totalItems, results } = await db.getAllProducts({ page, pageSize, search, sort });
+        const minPrice = parseFloat(req.query.minPrice) || null;
+        const maxPrice = parseFloat(req.query.maxPrice) || null;
+        const { totalItems, results } = await db.getAllProducts({ page, pageSize, search, sort, minPrice, maxPrice });
         res.send({ totalItems, results });
     } catch (error) {
         console.error('Error getting products:', error);

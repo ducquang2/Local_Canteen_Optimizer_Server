@@ -121,7 +121,7 @@ async function getAllUsers({ page, pageSize, search, sort, sortBy}) {
 }
 
 // Products
-async function getAllProducts({ page, pageSize, search, sort}) {
+async function getAllProducts({ page, pageSize, search, sort, minPrice, maxPrice}) {
     try {
         const queryValues = [];
         const countValues = [];
@@ -134,6 +134,29 @@ async function getAllProducts({ page, pageSize, search, sort}) {
             countQuery += ' WHERE "product_name" ILIKE $1';
             queryValues.push(`%${search}%`);
             countValues.push(`%${search}%`);
+        }
+
+        if (minPrice && maxPrice) {
+            if (queryValues.length > 0) {
+                query += ' AND "price" BETWEEN $' + (queryValues.length + 1) + ' AND $' + (queryValues.length + 2);
+                countQuery += ' AND "price" BETWEEN $' + (countValues.length + 1) + ' AND $' + (countValues.length + 2);
+            } else {
+                query += ' WHERE "price" BETWEEN $' + (queryValues.length + 1) + ' AND $' + (queryValues.length + 2);
+                countQuery += ' WHERE "price" BETWEEN $' + (countValues.length + 1) + ' AND $' + (countValues.length + 2);
+            }
+            queryValues.push(minPrice, maxPrice);
+            countValues.push(minPrice, maxPrice);
+        } else if (maxPrice) {
+            // Chỉ có maxPrice (có thể là 0)
+            if (queryValues.length > 0) {
+                query += ' AND "price" <= $' + (queryValues.length + 1);
+                countQuery += ' AND "price" <= $' + (countValues.length + 1);
+            } else {
+                query += ' WHERE "price" <= $' + (queryValues.length + 1);
+                countQuery += ' WHERE "price" <= $' + (countValues.length + 1);
+            }
+            queryValues.push(maxPrice);
+            countValues.push(maxPrice);
         }
 
         // Điều kiện sắp xếp
