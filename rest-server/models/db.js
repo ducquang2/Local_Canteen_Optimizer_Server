@@ -337,6 +337,37 @@ async function getOrderItemByOrderId(orderId) {
     }
 }
 
+// Chart
+async function getSalesData() {
+    try {
+        const result = await pool.query(`
+            SELECT DATE_TRUNC('month', created_at) AS month, SUM(total_price) AS total_sales
+            FROM "Orders"
+            GROUP BY month
+            ORDER BY month
+        `);
+        return result.rows;
+    } catch (error) {
+        console.error('Error fetching sales data:', error);
+        throw error;
+    }
+}
+
+async function getUserGrowthData() {
+    try {
+        const result = await pool.query(`
+            SELECT DATE_TRUNC('month', created_at) AS month, COUNT(*) AS user_count
+            FROM "Users"
+            GROUP BY month
+            ORDER BY month
+        `);
+        return result.rows;
+    } catch (error) {
+        console.error('Error fetching user growth data:', error);
+        throw error;
+    }
+}
+
 module.exports = {
     createUser,
     getUserByUsername,
@@ -354,5 +385,7 @@ module.exports = {
     addOrder,
     updateOrderByID,
     addOrderItem,
-    getOrderItemByOrderId
+    getOrderItemByOrderId,
+    getSalesData,
+    getUserGrowthData,
 };

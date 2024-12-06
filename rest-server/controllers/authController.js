@@ -6,7 +6,7 @@ async function authorize(req, res) {
     try {
         const user = await db.getUserByUsername(username);
         if (!user || password !== user.password) {
-            return res.send(401, { error: 'Invalid credentials' });
+            return res.status(401).send({ error: 'Invalid credentials' });
         }
         const token = jwt.sign(
             { userId: user.id, username: user.username, role: user.role },
@@ -22,7 +22,7 @@ async function authorize(req, res) {
             }
         });
     } catch (error) {
-        return res.send(500, { error: error.message });
+        return res.status(500).send({ error: error.message });
     }
 }
 
@@ -32,10 +32,10 @@ function checkPermissions(req, res, next) {
 
     const userRole = req.user.role;
     if (userRole !== 'admin' && requiredRole === 'admin') {
-        return res.send(403, { error: 'Insufficient permissions' });
+        return res.status(403).send({ error: 'Insufficient permissions' });
     }
     if (userRole !== 'manager' && userRole !== 'admin' && requiredRole === 'manager') {
-        return res.send(403, { error: 'Insufficient permissions' });
+        return res.status(403).send({ error: 'Insufficient permissions' });
     }
     next();
 }
