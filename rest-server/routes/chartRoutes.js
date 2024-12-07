@@ -24,4 +24,15 @@ router.get('/chart/user-growth', async (req, res) => {
     }
 });
 
+// Endpoint for most product sold chart data
+router.get('/chart/most-product', async (req, res) => {
+    try {
+        const mostProductData = await db.getMostProductSold();
+        res.status(200).send(mostProductData);
+    } catch (error) {
+        console.error('Error fetching most product data:', error);
+        res.status(500).send({ message: 'An error occurred while fetching most product data' });
+    }
+});
+
 module.exports = router;

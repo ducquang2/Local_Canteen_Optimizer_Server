@@ -368,6 +368,23 @@ async function getUserGrowthData() {
     }
 }
 
+async function getMostProductSold() {
+    try {
+        const result = await pool.query(`
+            SELECT DATE_TRUNC('month', o.created_at) AS month, p.product_name, SUM(oi.quantity) AS total_quantity
+            FROM "Order_Items" oi
+            JOIN "Orders" o ON oi.order_id = o.order_id
+            JOIN "Products" p ON oi.product_id = p.product_id
+            GROUP BY month, p.product_name
+            ORDER BY month, total_quantity DESC
+        `);
+        return result.rows;
+    } catch (error) {
+        console.error('Error fetching user growth data:', error);
+        throw error;
+    }
+}
+
 module.exports = {
     createUser,
     getUserByUsername,
@@ -388,4 +405,5 @@ module.exports = {
     getOrderItemByOrderId,
     getSalesData,
     getUserGrowthData,
+    getMostProductSold,
 };
