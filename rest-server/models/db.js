@@ -240,13 +240,33 @@ async function updateProductByID(id, product) {
 }
 
 // Order
-async function getAllOrders() {
+async function getAllOrders({ page, pageSize, sort}) {
     try {
-        let query = 'SELECT * FROM "Orders" ORDER BY order_id DESC';
+        const queryValues = [];
+        const countValues = [];
+        let query = 'SELECT * FROM "Orders"';
+        let countQuery = 'SELECT COUNT(*) FROM "Orders"';
 
-        // Thực hiện truy vấn để lấy danh sách order
-        const result = await pool.query(query);
+        if (sort) {
+            query += ` ORDER BY "created_at" ${sort === 'desc' ? 'DESC' : 'ASC'}`;
+        }
+
+        // Phân trang
+        if (page && pageSize) {
+            const offset = (page - 1) * pageSize;
+            query += ` LIMIT $${queryValues.length + 1} OFFSET $${queryValues.length + 2}`;
+            queryValues.push(pageSize, offset);
+        }
+
+        // Thực hiện truy vấn để lấy danh sách sản phẩm
+        const result = await pool.query(query, queryValues);
         const results = result?.rows;
+
+        // Thực hiện truy vấn để đếm tổng số sản phẩm
+        const countResult = await pool.query(countQuery, countValues);
+        const totalItems = parseInt(countResult.rows[0].count, 10);
+
+        return { totalItems, results };
 
         return results ;
     } catch (error) {
@@ -328,13 +348,31 @@ async function addOrderItem(orderItem) {
     }
 }
 
+async function deleteOrderItemsByOrderId(orderId) {
+    try {
+        const query = `
+            DELETE FROM "Order_Items"
+            WHERE "order_id" = $1;
+        `;
+        const result = await pool.query(query, [orderId]);
+        await pool.query(
+            `UPDATE "Orders" SET total_price = 0 WHERE order_id = $1`,
+            [orderId]
+        );
+        return result.rowCount;
+    } catch (error) {
+        console.error('Error deleting order items:', error);
+        throw error;
+    }
+}
+
 // Order Id
 async function getOrderItemByOrderId(orderId) {
     try {
         
         const result = await pool.query(
             `SELECT oi.order_item_id, oi.order_id, oi.product_id, oi.quantity, oi.price, 
-                    p.product_name
+                    p.product_name, p.image_url
              FROM "Order_Items" oi
              JOIN "Products" p ON oi.product_id = p.product_id
              WHERE oi.order_id = $1`,
@@ -456,11 +494,12 @@ module.exports = {
     addOrderItem,
     getOrderItemByOrderId,
     completeOrder,
+    deleteOrderItemsByOrderId,
     getAllSeats,
     checkTableAvailability,
     updateTableWithOrder,
     resetTableAfterPayment,
     getOrderById,
     getOrderItems,
-    getCurrentOrderIdByTableId
+    getCurrentOrderIdByTableId,
 };
