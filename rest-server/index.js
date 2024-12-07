@@ -1,97 +1,39 @@
-require('dotenv').config();
+require("dotenv").config();
+const express = require("express");
+const jwt = require("jsonwebtoken");
+const authRoutes = require("./routes/authRoutes");
+const orderRoutes = require("./routes/orderRoutes");
+const productRoutes = require("./routes/productRoutes");
+const userRoutes = require("./routes/userRoutes");
+const chartRoutes = require("./routes/chartRoutes");
 
-const restify = require('restify');
-const restifyJwt = require('restify-jwt-community');
-const auth = require('./auth');
-const db = require('./db');
+const app = express();
+const port = 8080;
 
-const product = require('./product')
-const order = require('./order')
-const user = require('./user')
-
-const jwt = require('jsonwebtoken');
-
-
-const server = restify.createServer();
-server.use(restify.plugins.queryParser());
-server.use(restify.plugins.bodyParser());
-
-server.post('/auth', auth.authorize);
-
-// get all products
-server.get("/api/v1/products", product.getAllProducts);
-
-// get all orders
-server.get("/api/v1/orders", order.getAllOrders);
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Middleware to decode token and attach user to request
-server.use((req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return next();
+app.use((req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return next();
 
-    const token = authHeader.split(' ')[1];
-    console.log(token);
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log(decoded)
-        req.user = decoded;
-    } catch (err) {
-        return res.send(401, { error: 'Invalid or expired token' });
-    }
-    next();
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+  } catch (err) {
+    return res.status(401).send({ error: "Invalid or expired token" });
+  }
+  next();
 });
 
-server.get("/", (req, res, next) => {
-    res.send('Hello World!')
-});
+app.use("/api/v1", authRoutes);
+app.use("/api/v1", orderRoutes);
+app.use("/api/v1", productRoutes);
+app.use("/api/v1", userRoutes);
+app.use("/api/v1", chartRoutes);
 
-// Protected route with permissions
-server.get('/admin', (req, res, next) => {
-    req.route = { requiredRole: 'admin' };
-    auth.checkPermissions(req, res, next);
-}, (req, res, next) => {
-    res.send({ message: 'Welcome, Admin!' });
-    return next();
-});
-
-// Middleware check role
-function checkAdminPermissions(req, res, next) {
-    req.route = { requiredRole: 'admin' };
-    auth.checkPermissions(req, res, next);
-}
-
-function checkManagerPermissions(req, res, next) {
-    req.route = { requiredRole: 'manager' };
-    auth.checkPermissions(req, res, next);
-}
-
-// Get all users
-server.get("/api/v1/users", checkManagerPermissions, user.getAllUsers);
-
-// Delete products by id
-server.get("/api/v1/products/delete/:id", checkAdminPermissions, product.deleteProductById);
-
-// add products
-server.post("/api/v1/products/add", checkAdminPermissions, product.addProduct);
-
-// update product
-server.post("/api/v1/products/update/:id", checkAdminPermissions, product.updateProductByID);
-
-// Delete order by id
-server.get("/api/v1/orders/delete/:id", checkAdminPermissions, order.deleteOrderById);
-
-// add orders
-server.post("/api/v1/orders/add", checkAdminPermissions, order.addOrder);
-
-// update order
-server.post("/api/v1/orders/update/:id", checkAdminPermissions, order.updateOrderByID);
-
-// add order item
-server.post("/api/v1/orders-item/add/:orderId", checkAdminPermissions, order.addOrderItem);
-
-// get order item
-server.get("/api/v1/orders-item/:orderId", order.getOrderItemByOrderId);
-
-server.listen(8080, function () {
-    console.log('%s listening at %s', server.name, server.url);
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });

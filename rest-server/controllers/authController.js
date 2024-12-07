@@ -1,21 +1,17 @@
-require('dotenv').config();
-
-const restify = require('restify');
 const jwt = require('jsonwebtoken');
-const db = require('./db');
+const db = require('../models/db');
 
 async function authorize(req, res) {
     const { username, password } = req.body;
     try {
         const user = await db.getUserByUsername(username);
-        console.log("user", user);
         if (!user || password !== user.password) {
-            return res.send(401, { error: 'Invalid credentials' });
+            return res.status(401).send({ error: 'Invalid credentials' });
         }
         const token = jwt.sign(
-            { userId: user.id, username: user.username, role: user.role }, // Include role in token
+            { userId: user.id, username: user.username, role: user.role },
             process.env.JWT_SECRET,
-            { expiresIn: '3h' } // Token expires in 3 hour
+            { expiresIn: '3h' }
         );
         res.send({
             token, user: {
@@ -26,20 +22,20 @@ async function authorize(req, res) {
             }
         });
     } catch (error) {
-        return res.send(500, { error: error.message });
+        return res.status(500).send({ error: error.message });
     }
 }
 
-function checkPermissions(req, res, next) { // Corrected to a synchronous function
+function checkPermissions(req, res, next) {
     const requiredRole = req.route.requiredRole;
     if (!requiredRole) return next();
 
     const userRole = req.user.role;
     if (userRole !== 'admin' && requiredRole === 'admin') {
-        return res.send(403, { error: 'Insufficient permissions' });
+        return res.status(403).send({ error: 'Insufficient permissions' });
     }
     if (userRole !== 'manager' && userRole !== 'admin' && requiredRole === 'manager') {
-        return res.send(403, { error: 'Insufficient permissions' });
+        return res.status(403).send({ error: 'Insufficient permissions' });
     }
     next();
 }
