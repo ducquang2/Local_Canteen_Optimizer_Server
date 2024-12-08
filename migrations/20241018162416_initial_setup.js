@@ -146,6 +146,20 @@ exports.up = async function(knex) {
         table.text('description');
         table.timestamp('created_at').defaultTo(knex.fn.now());
     });
+
+    // Table Order
+    await knex.schema.createTable('Tables', (table) => {
+        table.increments('table_id').primary();
+        table.string('table_name', 100).notNullable();
+        table.boolean('is_available').defaultTo(true);
+        table
+            .integer('current_order_id')
+            .references('order_id')
+            .inTable('Orders')
+            .onDelete('SET NULL');
+        table.timestamp('created_at').defaultTo(knex.fn.now());
+        table.timestamp('updated_at').defaultTo(knex.fn.now());
+    });
 };
 
 /**
