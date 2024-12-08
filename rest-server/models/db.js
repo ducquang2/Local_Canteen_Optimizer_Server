@@ -10,114 +10,135 @@ const pool = new Pool({
 });
 
 async function createUser(username, password, full_name, phone_number, role) {
-    try {
-        const result = await pool.query(
-            'INSERT INTO "Users" (username, password, full_name, phone_number, role) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-            [username, password, full_name, phone_number, role]
-        );
-        return result.rows[0];
-    } catch (error) {
-        console.error('Error creating user:', error);
-        throw error;
-    }
+  try {
+    const result = await pool.query(
+      'INSERT INTO "Users" (username, password, full_name, phone_number, role) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [username, password, full_name, phone_number, role]
+    );
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error creating user:", error);
+    throw error;
+  }
 }
 
-async function updateUser(username, updates) {
-    const entries = Object.entries(updates).filter(([_, value]) => value !== undefined && value !== null);
-    if (entries.length === 0) return null;
+async function updateUser(id, updates) {
+  const entries = Object.entries(updates).filter(
+    ([_, value]) => value !== undefined && value !== null
+  );
+  if (entries.length === 0) return null;
 
-    const fields = entries.map(([key], index) => `${key} = $${index + 1}`);
-    const values = entries.map(([_, value]) => value);
+  const fields = entries.map(([key], index) => `${key} = $${index + 1}`);
+  const values = entries.map(([_, value]) => value);
 
-    const query = `UPDATE "Users" SET ${fields.join(", ")} WHERE username = $${entries.length + 1} RETURNING *`;
-    values.push(username);
+  const query = `UPDATE "Users" SET ${fields.join(", ")} WHERE user_id = $${
+    entries.length + 1
+  } RETURNING *`;
+  values.push(id);
 
-    try {
-        const result = await pool.query(query, values);
-        return result.rowCount > 0 ? result.rows[0] : null;
-    } catch (error) {
-        console.error('Error updating user:', error);
-        throw error;
-    }
+  try {
+    const result = await pool.query(query, values);
+    return result.rowCount > 0 ? result.rows[0] : null;
+  } catch (error) {
+    console.error("Error updating user:", error);
+    throw error;
+  }
 }
 
 async function usernameExists(username) {
-    try {
-        const result = await pool.query(
-            'SELECT 1 FROM "Users" WHERE username = $1',
-            [username]
-        );
-        return result.rowCount > 0;
-    } catch (error) {
-        console.error('Error checking username existence:', error);
-        throw error;
-    }
+  try {
+    const result = await pool.query(
+      'SELECT 1 FROM "Users" WHERE username = $1',
+      [username]
+    );
+    return result.rowCount > 0;
+  } catch (error) {
+    console.error("Error checking username existence:", error);
+    throw error;
+  }
 }
 
 async function getUserByUsername(username) {
-    try {
-        const result = await pool.query(
-            'SELECT * FROM "Users" WHERE username = $1',
-            [username]
-        );
-        return result.rows[0];
-    } catch (error) {
-        console.error('Error getting user:', error);
-        throw error;
-    }
+  try {
+    const result = await pool.query(
+      'SELECT * FROM "Users" WHERE username = $1',
+      [username]
+    );
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error getting user:", error);
+    throw error;
+  }
+}
+
+async function getUserById(id) {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM "Users" WHERE user_id = $1',
+      [id]
+    );
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error getting user:", error);
+    throw error;
+  }
 }
 
 async function getUserRole(username) {
-    try {
-        const result = await pool.query(
-            'SELECT role FROM "Users" WHERE username = $1',
-            [username]
-        );
-        return result.rows[0]?.role || 'staff'; // Default to 'staff' if no role is found
-    } catch (error) {
-        console.error('Error getting user role:', error);
-        throw error;
-    }
+  try {
+    const result = await pool.query(
+      'SELECT role FROM "Users" WHERE username = $1',
+      [username]
+    );
+    return result.rows[0]?.role || "staff"; // Default to 'staff' if no role is found
+  } catch (error) {
+    console.error("Error getting user role:", error);
+    throw error;
+  }
 }
 
-async function getAllUsers({ page, pageSize, search, sort, sortBy}) {
-    try {
-        const queryValues = [];
-        const countValues = [];
-        let query = 'SELECT * FROM "Users"';
-        let countQuery = 'SELECT COUNT(*) FROM "Users"';
+async function getAllUsers({ page, pageSize, search, sort, sortBy }) {
+  try {
+    const queryValues = [];
+    const countValues = [];
+    let query = 'SELECT * FROM "Users"';
+    let countQuery = 'SELECT COUNT(*) FROM "Users"';
 
-        // Điều kiện tìm kiếm
-        if (search) {
-            query += ' WHERE "username" ILIKE $1';
-            countQuery += ' WHERE "username" ILIKE $1';
-            queryValues.push(`%${search}%`);
-            countValues.push(`%${search}%`);
-        }
-
-        // Điều kiện sắp xếp
-        if (sort) {
-            query += ` ORDER BY "${sortBy || 'user_id'}" ${sort === 'desc' ? 'DESC' : 'ASC'}`;
-        }
-
-        // Phân trang
-        if (page && pageSize) {
-            const offset = (page - 1) * pageSize;
-            query += ` LIMIT $${queryValues.length + 1} OFFSET $${queryValues.length + 2}`;
-            queryValues.push(pageSize, offset);
-        }
-
-        const result = await pool.query(query, queryValues);
-        const results = result?.rows;
-
-        const countResult = await pool.query(countQuery, countValues);
-        const totalItems = parseInt(countResult.rows[0].count, 10);
-
-        return { totalItems, results };
-    } catch (error) {
-        console.error('Error getting user role:', error);
-        throw error;
+    // Điều kiện tìm kiếm
+    if (search) {
+      query += ' WHERE "username" ILIKE $1';
+      countQuery += ' WHERE "username" ILIKE $1';
+      queryValues.push(`%${search}%`);
+      countValues.push(`%${search}%`);
     }
+
+    // Điều kiện sắp xếp
+    if (sort) {
+      query += ` ORDER BY "${sortBy || "user_id"}" ${
+        sort === "desc" ? "DESC" : "ASC"
+      }`;
+    }
+
+    // Phân trang
+    if (page && pageSize) {
+      const offset = (page - 1) * pageSize;
+      query += ` LIMIT $${queryValues.length + 1} OFFSET $${
+        queryValues.length + 2
+      }`;
+      queryValues.push(pageSize, offset);
+    }
+
+    const result = await pool.query(query, queryValues);
+    const results = result?.rows;
+
+    const countResult = await pool.query(countQuery, countValues);
+    const totalItems = parseInt(countResult.rows[0].count, 10);
+
+    return { totalItems, results };
+  } catch (error) {
+    console.error("Error getting user role:", error);
+    throw error;
+  }
 }
 
 // Products
@@ -476,6 +497,54 @@ async function getCurrentOrderIdByTableId(tableId) {
     return result.rows[0]?.current_order_id || null;
 }
 
+// Chart
+async function getSalesData() {
+  try {
+    const result = await pool.query(`
+            SELECT DATE_TRUNC('month', created_at) AS month, SUM(total_price) AS total_sales
+            FROM "Orders"
+            GROUP BY month
+            ORDER BY month
+        `);
+    return result.rows;
+  } catch (error) {
+    console.error("Error fetching sales data:", error);
+    throw error;
+  }
+}
+
+async function getUserGrowthData() {
+  try {
+    const result = await pool.query(`
+            SELECT DATE_TRUNC('month', created_at) AS month, COUNT(*) AS user_count
+            FROM "Users"
+            GROUP BY month
+            ORDER BY month
+        `);
+    return result.rows;
+  } catch (error) {
+    console.error("Error fetching user growth data:", error);
+    throw error;
+  }
+}
+
+async function getMostProductSold() {
+  try {
+    const result = await pool.query(`
+            SELECT DATE_TRUNC('month', o.created_at) AS month, p.product_name, SUM(oi.quantity) AS total_quantity
+            FROM "Order_Items" oi
+            JOIN "Orders" o ON oi.order_id = o.order_id
+            JOIN "Products" p ON oi.product_id = p.product_id
+            GROUP BY month, p.product_name
+            ORDER BY month, total_quantity DESC
+        `);
+    return result.rows;
+  } catch (error) {
+    console.error("Error fetching user growth data:", error);
+    throw error;
+  }
+}
+
 module.exports = {
     createUser,
     getUserByUsername,
@@ -502,4 +571,7 @@ module.exports = {
     getOrderById,
     getOrderItems,
     getCurrentOrderIdByTableId,
+    getSalesData,
+    getUserGrowthData,
+    getMostProductSold,
 };

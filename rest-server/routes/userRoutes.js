@@ -8,6 +8,6 @@ const router = express.Router();
 router.get('/users', checkSupervisorPermission, userController.getAllUsers);
 
 router.post('/users', authenticateToken, userController.addUser);
-router.put('/users/:username', authenticateToken, userController.updateUser);
+router.put('/users/:id', authenticateToken, userController.updateUser);
 
 module.exports = router;

@@ -10,7 +10,6 @@ const {
     getOrderItemByTableId,
     deleteOrderItemsByOrderId
 } = require('../controllers/orderController');
-
 const { checkSupervisorPermission } = require('../middlewares/permissions');
 
 const router = express.Router();
