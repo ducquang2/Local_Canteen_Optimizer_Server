@@ -574,4 +574,5 @@ module.exports = {
     getSalesData,
     getUserGrowthData,
     getMostProductSold,
+    getUserById
 };
