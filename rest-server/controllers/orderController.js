@@ -2,8 +2,11 @@ const db = require('../models/db');
 
 async function getAllOrders(req, res) {
     try {
-        const results = await db.getAllOrders();
-        res.send({ results });
+        const page = parseInt(req.query.page, 10);
+        const pageSize = parseInt(req.query.pageSize, 10);
+        const sort = req.query.sort;
+        const { totalItems, results } = await db.getAllOrders({page, pageSize, sort});
+        res.send({ totalItems, results });
     } catch (error) {
         console.error('Error getting orders:', error);
         res.status(500).send({ message: 'An error occurred while getting the orders' });
@@ -27,10 +30,11 @@ async function deleteOrderById(req, res) {
 
 async function addOrder(req, res) {
     try {
-        const { customer_id, order_status, total_price } = req.body;
-        if (!total_price) {
-            return res.status(400).send({ message: "Price is required" });
-        }
+        const { customer_id, order_status} = req.body;
+        // if (!total_price) {
+        //     return res.status(400).send({ message: "Price is required" });
+        // }
+        const total_price = 0;
         const newOrder = await db.addOrder({ customer_id, order_status, total_price });
         res.status(201).send({ message: "Order added successfully", order: newOrder });
     } catch (error) {
@@ -66,14 +70,93 @@ async function addOrderItem(req, res) {
     }
 }
 
+async function deleteOrderItemsByOrderId(req, res) {
+    try {
+        const { orderId } = req.params;
+        if (!orderId) {
+            return res.send(400, { message: 'Order ID is required' });
+        }
+
+        const deletedCount = await db.deleteOrderItemsByOrderId(orderId);
+        // if (deletedCount === 0) {
+        //     return res.send(404, { message: 'No order items found for the given order ID' });
+        // }
+
+        res.send({ message: 'Order items deleted successfully'});
+    } catch (error) {
+        console.error('Error deleting order items:', error);
+        res.status(500).send({ message: 'An error occurred while deleting order items' });
+    }
+}
+
 async function getOrderItemByOrderId(req, res) {
     try {
         const orderId = req.params.orderId;
         const orderItems = await db.getOrderItemByOrderId(orderId);
-        res.status(201).send({ orderItems });
+        res.status(201).send({ items: orderItems });
     } catch (error) {
         console.error('Error getting order item:', error);
         res.status(500).send({ message: 'An error occurred while getting the order item' });
+    }
+}
+
+async function getOrderItemByTableId(req, res) {
+    const { tableId } = req.params;
+
+    try {
+        const orderId = await db.getCurrentOrderIdByTableId(tableId);
+
+        if (!orderId) {
+            return res.send(400,  {error: 'No order associated with this table' });
+        }
+
+        const order = await db.getOrderById(orderId);
+
+        if (!order) {
+            return res.send(400, { error: 'Order not found' });
+        }
+
+        // Lấy thông tin sản phẩm trong đơn hàng
+        const orderItems = await db.getOrderItems(orderId);
+
+        res.send(200,{
+            order,
+            items: orderItems,
+        });
+    } catch (error) {
+        console.error('Error fetching order details:', error);
+        res.send(500,{ error: 'Internal Server Error' });
+    }
+}
+
+// checkout
+async function checkout(req, res) {
+    const {table_id, order_id} = req.body;
+    if (!table_id) {
+        res.status(400)
+        return res.send({ message: "Table ID is required" });
+    }
+    try {
+        // const order_id = await db.getCurrentOrderIdByTableId(table_id);
+
+        // if (!order_id) {
+        //     return res.send(400,  {error: 'No order associated with this table' });
+        // }
+        // Cập nhật trạng thái đơn hàng
+        const updatedOrder = await db.completeOrder(order_id);
+        // Đặt lại trạng thái bàn
+        const resetTable = await db.resetTableAfterPayment(table_id)
+        
+        res.status(200)
+        res.send({
+            message: 'Checkout completed successfully',
+            table: resetTable,
+            order: updatedOrder,
+        });
+    } catch (error) {
+        console.error('Error during checkout:', error);
+        res.status(500)
+        res.json({ error: 'Internal Server Error' });
     }
 }
 
@@ -83,5 +166,8 @@ module.exports = {
     addOrder,
     updateOrderByID,
     addOrderItem,
-    getOrderItemByOrderId
+    getOrderItemByOrderId,
+    getOrderItemByTableId,
+    checkout,
+    deleteOrderItemsByOrderId
 };

@@ -7,3 +7,5 @@ postgrest
 postgrest.conf
 
 package-lock.json
+
+.idx
